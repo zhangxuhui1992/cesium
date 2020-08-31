@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>cameraFllow 相机跟踪</title>
+    <link rel="stylesheet" href="/Cesium-1.72/Build/Cesium/Widgets/widgets.css">
+    <script src="/Cesium-1.72/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+<div style="width:1500px;height:700px;">
+    <div id="cesiumContainer" style="width:100%;height:100%;"></div>
+</div>
+</body>
+</html>
+<script>
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        imageryProvider:new Cesium.UrlTemplateImageryProvider({
+            url:'http://localhost:8099/basemap_0-10/{z}/{y}/{x}.png', //本机地图服务
+            fileExtension : "png",
+        }),
+        geocoder:false, //一种地理位置搜索工具，用于显示相机访问的地理位置。默认使用微软的Bing地图。
+        homeButton:true, //首页位置，点击之后将视图跳转到默认视角。
+        sceneModePicker:true, //切换2D、3D 和 Columbus View (CV) 模式。
+        baseLayerPicker:false, //选择三维数字地球的底图（imagery and terrain）。
+        navigationHelpButton:true, //帮助提示，如何操作数字地球。
+        animation:false,//控制视窗动画的播放速度。
+        creditsDisplay:false, //展示商标版权和数据源。
+        timeline:false, //展示当前时间和允许用户在进度条上拖动到任何一个指定的时间。
+        fullscreenButton:true, //视察全屏按钮
+        shouldAnimate: true,
+        clock:new Cesium.Clock({
+            currentTime:Cesium.JulianDate.fromDate(new Date())
+        })
+    });
+    viewer.scene.globe.enableLighting = true;//启用以太阳为光源的地球
+
+    var position = Cesium.Cartesian3.fromDegrees(
+        -123.0744619,
+        44.0503706,
+        100000,
+    );
+
+    var entity = viewer.entities.add({
+        id:"plane",
+        name: "my big palne",
+        position: position,
+        model: {
+            uri: "/Cesium-1.72/Apps/SampleData/models/CesiumAir/Cesium_Air.glb",
+            minimumPixelSize: 128,
+            maximumScale: 20000,
+        },
+    });
+    //获取或设置相机当前正在跟踪的Entity实例
+    viewer.trackedEntity = entity;
+
+    var i = 0 ;
+    setInterval(function(){
+        viewer.entities.getById("plane").position=Cesium.Cartesian3.fromDegrees(
+            -123.0744619+i,
+            44.0503706,
+            100000,
+        );
+        i+=0.1;
+    },100);
+</script>
