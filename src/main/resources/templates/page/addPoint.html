@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>增加点 cesium (自定义图标)</title>
+    <link rel="stylesheet" href="/Cesium-1.72/Build/Cesium/Widgets/widgets.css">
+    <script src="/Cesium-1.72/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+<div style="width:1500px;height:700px;">
+    <div id="cesiumContainer" style="width:100%;height:100%;"></div>
+</div>
+</body>
+</html>
+<script>
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        geocoder:false, //一种地理位置搜索工具，用于显示相机访问的地理位置。默认使用微软的Bing地图。
+        homeButton:true, //首页位置，点击之后将视图跳转到默认视角。
+        sceneModePicker:true, //切换2D、3D 和 Columbus View (CV) 模式。
+        baseLayerPicker:false, //选择三维数字地球的底图（imagery and terrain）。
+        navigationHelpButton:true, //帮助提示，如何操作数字地球。
+        animation:false,//控制视窗动画的播放速度。
+        creditsDisplay:false, //展示商标版权和数据源。
+        timeline:false, //展示当前时间和允许用户在进度条上拖动到任何一个指定的时间。
+        fullscreenButton:true, //视察全屏按钮
+        imageryProvider:new Cesium.UrlTemplateImageryProvider({
+            url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII') + '/{z}/{x}/{reverseY}.jpg',
+            credit : '© Analytical Graphics, Inc.',
+            tilingScheme : new Cesium.GeographicTilingScheme(),
+            maximumLevel : 5
+        }),
+    });
+    viewer.scene.globe.enableLighting = true;//启用以太阳为光源的地球
+
+
+    //增加点
+    //静态方法，直接调用，返回->new Cesium.Cartesian3 ( x , y , z )
+    //Cesium.Cartesian3.fromDegrees (longitude, latitude, height , ellipsoid , result )
+    //前三个参数分别是经纬高
+    viewer.entities.add({
+        position:Cesium.Cartesian3.fromDegrees( 75.59, 40, 0),
+        billboard:{
+            image:'/Cesium-1.72/Apps/Sandcastle/images/facility.gif'
+        },
+        id:'MyCesium',
+        name:'Cesium-Station',
+        label : {
+            text : 'Citizens Bank Park',
+            font : '14pt monospace',
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            outlineWidth : 2,
+            verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset : new Cesium.Cartesian2(0, -10),
+            fillColor:Cesium.Color.GREEN
+        },
+        description:'自定义增加的点'
+    })
+</script>

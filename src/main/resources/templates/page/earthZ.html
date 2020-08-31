@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>earth 自转</title>
+    <link rel="stylesheet" href="/Cesium-1.72/Build/Cesium/Widgets/widgets.css">
+    <script src="/Cesium-1.72/Build/Cesium/Cesium.js"></script>
+</head>
+<div style="width:1500px;height:700px;">
+    <div id="cesiumContainer" style="width:100%;height:100%;"></div>
+</div>
+</html>
+<script>
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        imageryProvider:new Cesium.UrlTemplateImageryProvider({
+            url:'http://localhost:8099/basemap_0-10/{z}/{y}/{x}.png', //本机地图服务
+            fileExtension : "png",
+        }),
+        geocoder:false, //一种地理位置搜索工具，用于显示相机访问的地理位置。默认使用微软的Bing地图。
+        homeButton:true, //首页位置，点击之后将视图跳转到默认视角。
+        sceneModePicker:true, //切换2D、3D 和 Columbus View (CV) 模式。
+        baseLayerPicker:false, //选择三维数字地球的底图（imagery and terrain）。
+        navigationHelpButton:true, //帮助提示，如何操作数字地球。
+        animation:false,//控制视窗动画的播放速度。
+        creditsDisplay:false, //展示商标版权和数据源。
+        timeline:false, //展示当前时间和允许用户在进度条上拖动到任何一个指定的时间。
+        fullscreenButton:true, //视察全屏按钮
+        shouldAnimate: true,
+        clock:new Cesium.Clock({
+            currentTime:Cesium.JulianDate.fromDate(new Date())
+        })
+    });
+
+    viewer.scene.globe.enableLighting = true;//启用以太阳为光源的地球
+
+
+    // 地球自转
+    function icrf() {
+        if (!viewer || viewer.scene.mode !== Cesium.SceneMode.SCENE3D) {
+            return;
+        }
+        const icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(
+            viewer.clock.currentTime
+        );
+        if (Cesium.defined(icrfToFixed)) {
+            const camera = viewer.camera;
+            const offset = Cesium.Cartesian3.clone(camera.position);
+            const transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
+            camera.lookAtTransform(transform, offset);
+        }
+    }
+    //option可以设置时钟的一些参数，比如自转开始的时间，自转的速度等
+    const start = function (cesiumViewer,option={multiplier:1}) {
+        viewer = cesiumViewer
+        viewer.scene.postUpdate.addEventListener(icrf);
+        if(viewer.clock){
+            const keys=Object.keys(option)
+            for(let k of keys){
+                viewer.clock[k]=option[k]
+            }
+        }
+    }
+    const stop = function () {
+        if(!viewer){
+            return
+        }
+        viewer.clock.multiplier=1
+        viewer.scene.postUpdate.removeEventListener(icrf);
+        viewer = undefined
+    }
+
+    //为了能明显的看到，将时针速度设为500倍
+    start(viewer,{multiplier:500})
+
+    setTimeout(function () {
+        alert("停止自转")
+        stop();
+    },10000)
+</script>

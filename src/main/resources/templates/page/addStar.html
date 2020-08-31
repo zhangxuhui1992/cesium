@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>增加线 cesium </title>
+    <link rel="stylesheet" href="/Cesium-1.72/Build/Cesium/Widgets/widgets.css">
+    <script src="/Cesium-1.72/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+<div style="width:1500px;height:700px;">
+    <div id="cesiumContainer" style="width:100%;height:100%;"></div>
+</div>
+</body>
+</html>
+<script>
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        imageryProvider:new Cesium.UrlTemplateImageryProvider({
+            url:'http://localhost:8099/basemap_0-10/{z}/{y}/{x}.png', //本机地图服务
+            fileExtension : "png",
+        }),
+        geocoder:false, //一种地理位置搜索工具，用于显示相机访问的地理位置。默认使用微软的Bing地图。
+        homeButton:true, //首页位置，点击之后将视图跳转到默认视角。
+        sceneModePicker:true, //切换2D、3D 和 Columbus View (CV) 模式。
+        baseLayerPicker:false, //选择三维数字地球的底图（imagery and terrain）。
+        navigationHelpButton:true, //帮助提示，如何操作数字地球。
+        animation:false,//控制视窗动画的播放速度。
+        creditsDisplay:false, //展示商标版权和数据源。
+        timeline:false, //展示当前时间和允许用户在进度条上拖动到任何一个指定的时间。
+        fullscreenButton:true, //视察全屏按钮
+        shouldAnimate: true,
+        clock:new Cesium.Clock({
+            currentTime:Cesium.JulianDate.fromDate(new Date())
+        })
+    });
+
+    viewer.scene.globe.enableLighting = true;//启用以太阳为光源的地球
+
+
+
+    var arr = new Array();
+
+    viewer.entities.add({
+        id:'star1_t',
+        name : 'Orange line with black outline at height and following the surface',
+        description:'Orange Line',//描述
+        polyline : {
+            positions : Cesium.Cartesian3.fromDegreesArrayHeights(arr),
+            width : 5,
+            material : new Cesium.PolylineOutlineMaterialProperty({
+                color : new Cesium.Color ( 1 , 1 , 0 , 0.5 ),
+                outlineWidth : 2,
+                outlineColor : Cesium.Color.BLACK
+            })
+        }
+    })
+
+    //添加矩形
+    viewer.entities.add({
+        id:'star1_s1_p',
+        name: "Red polygon on surface",
+        polygon: {
+            hierarchy: Cesium.Cartesian3.fromDegreesArray([
+                -115.0,
+                37.0,
+                -115.0,
+                32.0,
+                -107.0,
+                33.0,
+                -102.0,
+                31.0,
+            ]),
+            material: new Cesium.GridMaterialProperty({
+                color : Cesium.Color.YELLOW,
+                cellAlpha : 0.2,
+            })
+        },
+    });
+
+    //添加线
+    viewer.entities.add({
+        name: "Purple straight arrow at height",
+        polyline: {
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                -75,
+                43,
+                500000,
+                -75,
+                43,
+                0,
+            ]),
+            width: 10,
+            arcType: Cesium.ArcType.NONE,
+            material: new Cesium.PolylineArrowMaterialProperty(
+                Cesium.Color.PURPLE
+            ),
+        },
+    });
+
+    //添加卫星模型
+    ent = new Cesium.Entity({
+        id:'star1',
+        name:'star',
+        description:'卫星',
+        position:Cesium.Cartesian3.fromDegrees( 10,0,4000000),
+        model:{
+            uri: '/Cesium-1.72/Apps/SampleData/models/CesiumAir/Cesium_Air.glb',
+            minimumPixelSize : 128,
+            maximumScale : 40000
+        }
+    });
+    viewer.entities.add(ent);
+
+
+    //添加三角型
+    viewer.entities.add({
+        id:'lines',
+        name: "Cyan vertical polygon with per-position heights and outline",
+        polygon: {
+            hierarchy: Cesium.Cartesian3.fromDegreesArrayHeights([
+                -90.0,
+                41.0,
+                0.0,
+                -85.0,
+                41.0,
+                500000.0,
+                -80.0,
+                41.0,
+                0.0,
+            ]),
+            perPositionHeight: true,
+            material: Cesium.Color.CYAN.withAlpha(0.5),
+            outline: true,
+            outlineColor: Cesium.Color.BLACK,
+        },
+    });
+
+
+    var x =0;
+
+    setInterval(function() {
+
+        var data = new Array();
+        data.push(x+1);
+        data.push(10);
+        data.push(x-5);
+        data.push(10);
+        data.push(x-5);
+        data.push(-10);
+        data.push(x+1);
+        data.push(-10);
+
+        //更改时间
+        viewer.clock=new Cesium.Clock({
+            currentTime:Cesium.JulianDate.fromDate(new Date())
+        })
+        //图像更改1
+        var position = Cesium.Cartesian3.fromDegrees(x,0,4000000)
+        viewer.entities.getById('star1').position=position;
+        arr.push(x);
+        arr.push(0);
+        arr.push(4000000);
+        viewer.entities.getById('star1_t').polyline.positions = Cesium.Cartesian3.fromDegreesArrayHeights(arr);
+        viewer.entities.getById('star1_s1_p').polygon.hierarchy=Cesium.Cartesian3.fromDegreesArray(data);
+        x += 10;
+    },1000);
+
+
+
+
+   /* var x  = 0;
+    var ent = null;
+    setInterval(function() {
+        if(ent != null){
+            viewer.entities.remove(ent);
+        }
+        //添加卫星模型
+         ent = new Cesium.Entity({
+            name:'star',
+            description:'卫星',
+            position:Cesium.Cartesian3.fromDegrees( x,0,4000000),
+            model:{
+                uri: '/Cesium-1.72/Apps/SampleData/models/CesiumAir/Cesium_Air.glb',
+                minimumPixelSize : 128,
+                maximumScale : 40000
+            }
+        });
+        viewer.entities.add(ent);
+        x+=1;
+        if(x == 360){
+            x = 0 ;
+        }
+    },1000);*/
+
+
+</script>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D模型姿态控制</title>
+    <link rel="stylesheet" href="/Cesium-1.72/Build/Cesium/Widgets/widgets.css">
+    <script src="/Cesium-1.72/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+<div style="width:1500px;height:700px;">
+    <div id="toolbar" style="z-index: 999;"></div>
+    <div id="cesiumContainer" style="width:100%;height:100%;"></div>
+</div>
+</body>
+</html>
+<script>
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        geocoder:false, //一种地理位置搜索工具，用于显示相机访问的地理位置。默认使用微软的Bing地图。
+        homeButton:true, //首页位置，点击之后将视图跳转到默认视角。
+        sceneModePicker:true, //切换2D、3D 和 Columbus View (CV) 模式。
+        baseLayerPicker:false, //选择三维数字地球的底图（imagery and terrain）。
+        navigationHelpButton:true, //帮助提示，如何操作数字地球。
+        animation:false,//控制视窗动画的播放速度。
+        creditsDisplay:false, //展示商标版权和数据源。
+        timeline:false, //展示当前时间和允许用户在进度条上拖动到任何一个指定的时间。
+        fullscreenButton:true, //视察全屏按钮
+        shouldAnimate:true
+    });
+    viewer.scene.globe.enableLighting = true;//启用以太阳为光源的地球
+
+    var heading = Cesium.Math.toRadians(0);//模型头的位置 y轴方向旋转
+    var pitch = 0;//z 轴方向旋转
+    var roll = 0;//x 轴方向旋转
+    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+        Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 5000),
+        hpr
+    );
+
+
+    var entity = new Cesium.Entity({
+        id:'palne',
+        name:'My plane',
+        position: Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 5000),
+        orientation:orientation,
+        model:{
+            uri:  "/Cesium-1.72/Apps/SampleData/models/CesiumAir/Cesium_Air.glb",
+            minimumPixelSize: 128,
+            maximumScale: 20000,
+        }
+    })
+    viewer.entities.add(entity);
+
+    viewer.zoomTo(entity);
+
+    var imageryLayers = viewer.imageryLayers;
+
+    // The viewModel tracks the state of our mini application.
+    var viewModel = {
+        brightness: 0,
+        contrast: 0,
+        hue: 0,
+        saturation: 0,
+        gamma: 0,
+    };
+    // Convert the viewModel members into knockout observables.
+    Cesium.knockout.track(viewModel);
+
+    // Bind the viewModel to the DOM elements of the UI that call for it.
+    var toolbar = document.getElementById("toolbar");
+    Cesium.knockout.applyBindings(viewModel, toolbar);
+
+    // Make the active imagery layer a subscriber of the viewModel.
+    function subscribeLayerParameter(name) {
+        Cesium.knockout
+            .getObservable(viewModel, name)
+            .subscribe(function (newValue) {
+                if (imageryLayers.length > 0) {
+                    var layer = imageryLayers.get(0);
+                    layer[name] = newValue;
+                }
+            });
+    }
+    subscribeLayerParameter("brightness");
+    subscribeLayerParameter("contrast");
+    subscribeLayerParameter("hue");
+    subscribeLayerParameter("saturation");
+    subscribeLayerParameter("gamma");
+</script>

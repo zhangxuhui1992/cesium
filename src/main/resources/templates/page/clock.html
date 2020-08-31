@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>clock 时钟</title>
+    <link rel="stylesheet" href="/Cesium-1.72/Build/Cesium/Widgets/widgets.css">
+    <script src="/Cesium-1.72/Build/Cesium/Cesium.js"></script>
+    <script src="/Cesium-1.72/Apps/Sandcastle/Sandcastle-header.js"></script>
+    <link rel="stylesheet" href="/Cesium-1.72/Apps/Sandcastle/templates/bucket.css">
+</head>
+<body style="background-color: #fff;">
+    <div style="width:1500px;height:700px;">
+        <div id="toolbar" style="z-index: 999;"></div>
+        <div id="cesiumContainer" style="width:100%;height:100%;"></div>
+    </div>
+</body>
+</html>
+<script>
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        imageryProvider:new Cesium.UrlTemplateImageryProvider({
+            url:'http://localhost:8099/basemap_0-10/{z}/{y}/{x}.png', //本机地图服务
+            fileExtension : "png",
+        }),
+    });
+    viewer.scene.globe.enableLighting = true;//启用以太阳为光源的地球
+
+    // Create a clock that loops on Christmas day 2013 and runs in 4000x real time.
+    var clock = new Cesium.Clock({
+        startTime: Cesium.JulianDate.fromIso8601("2013-12-25"),
+        currentTime: Cesium.JulianDate.fromIso8601("2013-12-25"),
+        stopTime: Cesium.JulianDate.fromIso8601("2013-12-26"),
+        clockRange: Cesium.ClockRange.LOOP_STOP, // loop when we hit the end time
+        clockStep: Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER,
+        multiplier: 4000, // how much time to advance each tick
+        shouldAnimate: true, // Animation on by default
+    });
+
+    viewer.clockViewModel = clock;
+
+    viewer.scene.globe.enableLighting = true;
+
+    Sandcastle.addToolbarButton("Reset Current Time", function () {
+        var resetTime = viewer.clockViewModel.startTime;
+        viewer.clockViewModel.currentTime = resetTime;
+        viewer.timeline.updateFromClock();
+    });
+
+    Sandcastle.addToolbarButton("Slow Down Clock", function () {
+        viewer.clockViewModel.multiplier /= 2;
+    });
+
+    Sandcastle.addToolbarButton("Speed Up Clock", function () {
+        viewer.clockViewModel.multiplier *= 2;
+    });
+</script>
